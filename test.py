@@ -37,8 +37,8 @@ if __name__ == "__main__":
 
     q = collections.deque()
     visited = set()
-    q.append([start, start])
-    res = [start]
+    q.append([start, [start]])
+    res = []
 
     while q:
         n, path = q.popleft()
@@ -49,19 +49,18 @@ if __name__ == "__main__":
                 start, end, cost = vertex
                 if start == "a" and end not in visited:
                     visited.add(end)
-                    q.append([end, path+end])
-                    res.append(end)
-
-    #draws circles: coordinates are center of circle
-    for i in range(len(res)):
-        x,y = G.get_coordinates(res[i])
+                    q.append([end, path + [end]])
+    print(path)
+ #draws circles: coordinates are center of circle
+    for i in range(len(path)):
+        x,y = G.get_coordinates(path[i])
         print(x,y)
         draw.ellipse([x-20, y-20, x+20, y+20], fill=(255, 255, 0))
     # draws lines
-    for i in range(len(res)):
-        x,y = G.get_coordinates(res[i])
-        if i+1 < len(res):
-            x2, y2 = G.get_coordinates(res[i + 1])
+    for i in range(len(path)):
+        x,y = G.get_coordinates(path[i])
+        if i+1 < len(path):
+            x2, y2 = G.get_coordinates(path[i + 1])
             draw.line([x,y,x2,y2], fill=(0,0,0), width=3)
 
     img.save('my.png')
