@@ -6,14 +6,6 @@ import numpy as np
 import collections
 
 
-"""
-These are the coordinates in test.txt:
-(72 131)
-(125 100)
-(125 162)
-(372 131)
-(425 100)
-"""
 if __name__ == "__main__":
     def dist(p1, p2):  # takes tuple
         distance = math.sqrt(((p1[0] - p2[0]) ** 2) + ((p1[1] - p2[1]) ** 2))
@@ -28,133 +20,149 @@ if __name__ == "__main__":
     img = Image.fromarray(data, 'RGB')
     draw = ImageDraw.Draw(img)
 
+
     #this is basic graph
     N = 0
     coord = []
     filepath = "tsplib/test.txt"
+
+    ##########################################
+    # These are coordinates in test.txt      #
+    # 0 72 131                               #
+    # 1 125 100                              #
+    # 2 125 162                              #
+    # 3 425 100                              #
+    # 4 372 131                              #
+    ##########################################
+
     with open(filepath) as fp:
         for cnt, line in enumerate(fp):
             s = line.split()
             idx, x, y = s
             coord.append((int(x),int(y)))
-            #print(x, y)
             # print("Line {}: {}".format(cnt, line))
             N+=1
 
-    print(coord)
     G = {}
     for i in range(N):
         G[i] = (coord[i][0], coord[i][1])
 
-        ############################
-        #
-        #       THIS IS THE SUBTOUR CUT!!!!
-        #
-        #
+    ################################################################################
+    #                                                                              #
+    #   THIS IS THE SUBTOUR, cutting group on the left from the right              #
+    #   -draws the moats around the control zone                                   #
+    ################################################################################
 
     radii2 = {}
-    subtour = pulp.LpProblem("subtour", pulp.LpMaximize)
+    tour = pulp.LpProblem("tour", pulp.LpMaximize)
 
+    #Creates the variables to be used in objective function
     for i in range(N):
         radii2["r_" + str(i)] = pulp.LpVariable("r_" + str(i), lowBound=0, cat='Continuous')
-
-    radii2["r_Y"] = pulp.LpVariable("r_Y", lowBound=0, cat='Continuous')
+    radii2["r_Ys"] = pulp.LpVariable("r_Ys", lowBound=0, cat='Continuous')
 
     # Objective function
-
-    subtour += 2*radii2["r_0"] + 2*radii2["r_1"] + 2*radii2["r_2"] + 2*radii2["r_3"] + 2*radii2["r_4"] + 2*radii2["r_Y"], "Z"
+    tour += 2*radii2["r_0"] + 2*radii2["r_1"] + 2*radii2["r_2"] + 2*radii2["r_3"] + 2*radii2["r_4"] + 12*radii2["r_Ys"], "Z"
 
     # Constraints
     for i in range(N):
         for j in range(i + 1, N):
-            print(i, j)
             if (i == 0 and j == 3) or (i == 1 and j == 3) or (i == 2 and j == 3) or (i == 0 and j == 4) or (i == 1 and j == 4) or (i == 2 and j == 4):
                 continue
             else:
-                subtour += radii2["r_" + str(i)] + radii2["r_" + str(j)] <= dist(G[i], G[j])
+                tour += radii2["r_" + str(i)] + radii2["r_" + str(j)] <= dist(G[i], G[j])
 
-    subtour += (radii2["r_0"] + radii2["r_3"]) +  radii2["r_Y"]*2 <= dist(G[0], G[3])
-    subtour += (radii2["r_1"] + radii2["r_3"]) +  radii2["r_Y"]*2 <= dist(G[1], G[3])
-    subtour += (radii2["r_2"] + radii2["r_3"]) +  radii2["r_Y"]*2 <= dist(G[2], G[3])
-    subtour += (radii2["r_0"] + radii2["r_4"]) +  radii2["r_Y"]*2 <= dist(G[0], G[4])
-    subtour += (radii2["r_1"] + radii2["r_4"]) +  radii2["r_Y"]*2 <= dist(G[1], G[4])
-    subtour += (radii2["r_2"] + radii2["r_4"]) + radii2["r_Y"]*2 <= dist(G[2], G[4])
+    tour += (radii2["r_0"] + radii2["r_3"]) +  radii2["r_Ys"]*2 <= dist(G[0], G[3])
+    tour += (radii2["r_1"] + radii2["r_3"]) +  radii2["r_Ys"]*2 <= dist(G[1], G[3])
+    tour += (radii2["r_2"] + radii2["r_3"]) +  radii2["r_Ys"]*2 <= dist(G[2], G[3])
+    tour += (radii2["r_0"] + radii2["r_4"]) +  radii2["r_Ys"]*2 <= dist(G[0], G[4])
+    tour += (radii2["r_1"] + radii2["r_4"]) +  radii2["r_Ys"]*2 <= dist(G[1], G[4])
+    tour += (radii2["r_2"] + radii2["r_4"]) +  radii2["r_Ys"]*2 <= dist(G[2], G[4])
 
+    #Prints in console the function:
+    print(tour)
 
-    subtour.solve()
-    pulp.LpStatus[subtour.status]
+    #Solves the inequalities
+    tour.solve()
+    pulp.LpStatus[tour.status]
+
+    #Assigns all the radii in a dict so we can draw them
     new_radii2 = {}
-
-    for variable in subtour.variables():
+    for variable in tour.variables():
         new_radii2[variable.name] = variable.varValue
+        # print("{} = {}".format(variable.name, variable.varValue))
 
-    Ys = new_radii2["r_Y"]
+    Ys = new_radii2["r_Ys"]
     for idx, v in enumerate(G):
-        if idx < 5:
+        if idx < N:
             x, y = G[v]
             temp = new_radii2["r_" + str(idx)]
             draw.ellipse([x - Ys , y - Ys , x + Ys , y + Ys ], fill=(232, 232, 232))
             draw.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(0, 0, 0))
 
-    print("r_Y", Ys)
+    print("r_Ys", Ys)
 
-    #############################
-    #this is PRIMAL
+    ################################################################################
+    #                                                                              #
+    #   THIS IS THE MAIN TOUR, creating the control zones                          #
+    #                                                                              #
+    ################################################################################
+
+    main_tour = pulp.LpProblem("My LP Problem", pulp.LpMaximize)
     radii = {}
-    test = pulp.LpProblem("My LP Problem", pulp.LpMaximize)
-
     for i in range(N):
         radii["r_" + str(i)] = pulp.LpVariable("r_" + str(i), lowBound=0, cat='Continuous')
 
     # Objective function
-    test += pulp.lpSum(2*radii["r_" + str(i)] for i in range(N)), "Z"
+    main_tour += pulp.lpSum(2*radii["r_" + str(i)] for i in range(N)), "Z"
+
     # Constraints
     for i in range(N):
         for j in range(i + 1, N):
             print(i, j)
-            test += radii["r_" + str(i)] + radii["r_" + str(j)] <= dist(G[i],
+            main_tour += radii["r_" + str(i)] + radii["r_" + str(j)] <= dist(G[i],
                                                                                  G[j])
 
-    test.solve()
-    pulp.LpStatus[test.status]
-    new_radii = {}
+    main_tour.solve()
 
-    for variable in test.variables():
+    # Stores the radii in a dict
+    new_radii = {}
+    for variable in main_tour.variables():
         new_radii[variable.name] = variable.varValue
 
+    # Draws the control zones
     for idx, v in enumerate(G):
         x, y = G[v]
         temp = new_radii["r_" + str(idx)]
         draw.ellipse([x - temp, y - temp, x + temp, y + temp], fill=(232, 217, 86))
         draw.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(0, 0, 0))
 
-    ############################
-    ############################
-    #############################
-    #############################
-    # this draws the TOUR, not the radii
+    ################################################################################
+    #                                                                              #
+    #   This creates the route, using int LP, denoted by the black lines
+    #                                                                              #
+    ################################################################################
 
     primal = pulp.LpProblem("My LP Problem", pulp.LpMinimize)
     X = {}
     dist_xy = {}
 
-    # gets the distance (i,j) from graph
+    # Gets the distance (i,j)
     for i in range(N):
         for j in range(i + 1, N):
             dist_xy[(i, j)] = dist(coord[i], coord[j])
 
-    # sets the variables in dict X, either 1 or 0
+    # Sets the variables in dict X, either 1 or 0; tells you whether or not you take the path (i,j)
     for i in range(N):
         for j in range(i + 1, N):
             X[str(i) + "_" + str(j)] = pulp.LpVariable(str(i) + "_" + str(j), lowBound=0, cat='Binary')
 
-    print("xxxx", X)
-    # objective function:
-
+    # Objective function:
     primal += pulp.lpSum(X[str(i)+"_"+str(j)] * dist_xy[(i, j)] for i in range(N) for j in range(i+1, N)), "Z"
 
+    # Constraints
+    # Creating a temp Object so that it solves it in one line
 
-    #constraints
     for i in range(N):
         temp = pulp.LpAffineExpression()
         for j in range(N):
@@ -165,18 +173,34 @@ if __name__ == "__main__":
                     temp += pulp.lpSum(X[str(j) + "_" + str(i)])
         primal += temp == 2
 
+    # This is what it translates to:
+    # primal += X["0_1"] + X["0_2"] + X["0_3"] + X["0_4"] == 2
+    # primal += X["0_1"] + X["1_2"] + X["1_3"] + X["1_4"] == 2
+    # primal += X["0_2"] + X["1_2"] + X["2_3"] + X["2_4"] == 2
+    # primal += X["0_3"] + X["1_3"] + X["2_3"] + X["3_4"] == 2
+    # primal += X["0_4"] + X["1_4"] + X["2_4"] + X["3_4"] == 2
 
     primal.solve()
-    pulp.LpStatus[primal.status]
     for variable in primal.variables():
         X[str(variable.name)] = int(variable.varValue)
 
+    # Connects the path for the final tour
     for path in X:
         if X[path]:
             x_1, y_1 = G[int(path[:1])]
             x_2, y_2 = G[int(path[2:])]
             draw.line([x_1, y_1, x_2, y_2], fill=(0, 0, 0), width=1)
 
- #draws circles: coordinates are center of circle
+
     img.save('my.png')
     img.show()
+
+    """
+    ........
+    all flights in and out of the city
+    #the dual to the primal:
+    maximize the size of the circles subject to the circles odont intersect each there
+    ...look for the symmetries in the functions
+
+    all those constraints become dual variables for the cities 
+    """
