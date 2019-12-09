@@ -60,9 +60,10 @@ if __name__ == "__main__":
     for i in range(N):
         radii2["r_" + str(i)] = pulp.LpVariable("r_" + str(i), lowBound=0, cat='Continuous')
     radii2["r_Ys"] = pulp.LpVariable("r_Ys", lowBound=0, cat='Continuous')
+    radii2["r_Ys2"] = pulp.LpVariable("r_Ys2", lowBound=0, cat='Continuous')
 
     # Objective function
-    tour += 2*radii2["r_0"] + 2*radii2["r_1"] + 2*radii2["r_2"] + 2*radii2["r_3"] + 2*radii2["r_4"] + 12*radii2["r_Ys"], "Z"
+    tour += 2*radii2["r_0"] + 2*radii2["r_1"] + 2*radii2["r_2"] + 2*radii2["r_3"] + 2*radii2["r_4"] + 2*radii2["r_Ys"] + 2*radii2["r_Ys2"], "Z"
 
     # Constraints
     for i in range(N):
@@ -72,12 +73,12 @@ if __name__ == "__main__":
             else:
                 tour += radii2["r_" + str(i)] + radii2["r_" + str(j)] <= dist(G[i], G[j])
 
-    tour += (radii2["r_0"] + radii2["r_3"]) +  radii2["r_Ys"]*2 <= dist(G[0], G[3])
-    tour += (radii2["r_1"] + radii2["r_3"]) +  radii2["r_Ys"]*2 <= dist(G[1], G[3])
-    tour += (radii2["r_2"] + radii2["r_3"]) +  radii2["r_Ys"]*2 <= dist(G[2], G[3])
-    tour += (radii2["r_0"] + radii2["r_4"]) +  radii2["r_Ys"]*2 <= dist(G[0], G[4])
-    tour += (radii2["r_1"] + radii2["r_4"]) +  radii2["r_Ys"]*2 <= dist(G[1], G[4])
-    tour += (radii2["r_2"] + radii2["r_4"]) +  radii2["r_Ys"]*2 <= dist(G[2], G[4])
+    tour += (radii2["r_0"] + radii2["r_3"]) +  radii2["r_Ys"] + radii2["r_Ys2"] <= dist(G[0], G[3])
+    tour += (radii2["r_1"] + radii2["r_3"]) +  radii2["r_Ys"] + radii2["r_Ys2"]  <= dist(G[1], G[3])
+    tour += (radii2["r_2"] + radii2["r_3"]) +  radii2["r_Ys"] + radii2["r_Ys2"] <= dist(G[2], G[3])
+    tour += (radii2["r_0"] + radii2["r_4"]) +  radii2["r_Ys"] + radii2["r_Ys2"] <= dist(G[0], G[4])
+    tour += (radii2["r_1"] + radii2["r_4"]) +  radii2["r_Ys"] + radii2["r_Ys2"] <= dist(G[1], G[4])
+    tour += (radii2["r_2"] + radii2["r_4"]) +  radii2["r_Ys"] + radii2["r_Ys2"]  <= dist(G[2], G[4])
 
     #Prints in console the function:
     print(tour)
@@ -90,17 +91,23 @@ if __name__ == "__main__":
     new_radii2 = {}
     for variable in tour.variables():
         new_radii2[variable.name] = variable.varValue
-        # print("{} = {}".format(variable.name, variable.varValue))
+        print("{} = {}".format(variable.name, variable.varValue))
 
-    Ys = new_radii2["r_Ys"]
     for idx, v in enumerate(G):
         if idx < N:
             x, y = G[v]
-            temp = new_radii2["r_" + str(idx)]
-            draw.ellipse([x - Ys , y - Ys , x + Ys , y + Ys ], fill=(232, 232, 232))
+            if idx < 3:
+                moat = new_radii2["r_Ys"]
+            else:
+                moat = new_radii2["r_Ys2"]
+
+            moat += new_radii2["r_" + str(idx)]
+
+            draw.ellipse([x - moat , y - moat , x + moat , y + moat ], fill=(232, 232, 232))
+
             draw.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(0, 0, 0))
 
-    print("r_Ys", Ys)
+    #print("r_Ys", Ys)
 
     ################################################################################
     #                                                                              #
@@ -108,32 +115,10 @@ if __name__ == "__main__":
     #                                                                              #
     ################################################################################
 
-    main_tour = pulp.LpProblem("My LP Problem", pulp.LpMaximize)
-    radii = {}
-    for i in range(N):
-        radii["r_" + str(i)] = pulp.LpVariable("r_" + str(i), lowBound=0, cat='Continuous')
-
-    # Objective function
-    main_tour += pulp.lpSum(2*radii["r_" + str(i)] for i in range(N)), "Z"
-
-    # Constraints
-    for i in range(N):
-        for j in range(i + 1, N):
-            print(i, j)
-            main_tour += radii["r_" + str(i)] + radii["r_" + str(j)] <= dist(G[i],
-                                                                                 G[j])
-
-    main_tour.solve()
-
-    # Stores the radii in a dict
-    new_radii = {}
-    for variable in main_tour.variables():
-        new_radii[variable.name] = variable.varValue
-
     # Draws the control zones
     for idx, v in enumerate(G):
         x, y = G[v]
-        temp = new_radii["r_" + str(idx)]
+        temp = new_radii2["r_" + str(idx)]
         draw.ellipse([x - temp, y - temp, x + temp, y + temp], fill=(232, 217, 86))
         draw.ellipse([x - 2, y - 2, x + 2, y + 2], fill=(0, 0, 0))
 
