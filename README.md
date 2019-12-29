@@ -4,20 +4,17 @@ This project is a TSP visualizer that uses Integer Linear Programming (branch an
 
 While the programming is running, it is also solving for the dual of the problem (primal is to minimize the distance, dual is to maximze the width (distance) of the city). It uses the answer of the subtour relaxation of the primal to create new constraints for the dual.
 
-## Getting Started
+## Algorithm
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-### Prerequisites
-
-What things you need to install the software and how to install them
-
+![](primal_equation.PNG)
 ```
 Give examples
 ```
 
+
 ## Resources
 http://www.math.uwaterloo.ca/tsp/methods/opt/zone.htm
+
 https://www.epfl.ch/labs/dcg/wp-content/uploads/2018/10/13-TSP.pdf
 
 
