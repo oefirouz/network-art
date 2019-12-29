@@ -8,8 +8,8 @@ While the programming is running, it is also solving for the dual of the problem
 Let's say we have number of cities n and for two cities, i and j, we let x(i,j) be whether or not we choose to use the city. If the city is used: x(i,j) = 1. If it is not: x(i,j) = 0. To calculate the length of the tour, we calculate the distance of each city and all possible paths from that city and whether or not the city is used. We observe that for every city and its corresponding possible paths, it will sum up to 2 because we have to enter and exit each city exactly once.
 ```
 It can be written as:
-![](primal_equation.PNG)
 ```
+![](primal_equation.PNG)
 
 
 
