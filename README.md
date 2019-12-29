@@ -4,7 +4,7 @@ This project is a TSP visualizer that uses Integer Linear Programming (branch an
 
 While the programming is running, it is also solving for the dual of the problem (primal is to minimize the distance, dual is to maximze the width (distance) of the city). It uses the answer of the subtour relaxation of the primal to create new constraints for the dual.
 
-## Algorithm
+## The Primal (finding the tour)
 Let's say we have number of cities n and for two cities, i and j, we let x(i,j) be whether or not we choose to use the city. If the city is used: x(i,j) = 1. If it is not: x(i,j) = 0. To calculate the length of the tour, we calculate the distance of each city and all possible paths from that city and whether or not the city is used. We observe that for every city and its corresponding possible paths, it will sum up to 2 because we have to enter and exit each city exactly once.
 ```
 It can be written as:
@@ -19,7 +19,8 @@ It can be written as:
 
 We then keep iterating until we have no subtours left. Keep in mind that past constraints must be kept in new iterations.
 
-
+## The Dual (size of the city)
+After the first iteration is solved in the primal problem, we use the subtours to add additional variables (Ys) to the dual problem. The additional variables....etc
 
 ## Resources
 http://www.math.uwaterloo.ca/tsp/methods/opt/zone.htm
