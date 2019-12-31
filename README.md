@@ -1,8 +1,8 @@
 # Traveling Salesman Problem Visualizer 
 
-This project is a TSP visualizer that uses Integer Linear Programming (branch and bound method) to find the shortest tour that visits each city only once. Typically, the path will not be found in the first iteration, so we need to solve the subtour relaxation by finding relevant constraints, since the number of possible combinations is exponential. We do a DFS to find the subtours and use that information to form new constraints. We repeat this process until a tour is a found.
+This project is a TSP visualizer that uses Integer Linear Programming (branch and bound method) to find the shortest tour that visits each city only once. Typically, the path will not be found in the first iteration, so we need to find the relevant constraints since the number of possible combinations is exponential. The subtour-elimination constraints will be found via DFS and the process is repeated until a tour is found.
 
-While the program is running, it is also solving for the dual of the problem (primal is to minimize the distance, dual is to maximze the width (distance) of the city). It uses the answer of the subtour relaxation of the primal to create new constraints for the dual.
+While the program is running, it is also solving for the dual of the problem (primal is to minimize the distance, dual is to maximze the width (distance) of the city). It uses the subtours of the primal to create new constraints for the dual.
 
 In short, the relationship of the dual to the primal can be summed up as a different view of the objective function. For example, if we wanted to maximize the space of a storage unit as our objective function, the dual would be to minimize the amount of space in the storage unit. Mathematically, each variable in the primal LP becomes the constraint in the dual. Each constraint in the primal becomes a variable in the dual. It works beautifully that the variables in our dual happen to be the size of each city!
 
@@ -22,7 +22,20 @@ It can be written as:
 We then keep iterating until we have no subtours left. Keep in mind that past constraints must be kept in new iterations.
 
 ## The Dual (size of the city)
-After the first iteration is solved in the primal problem, we use the subtours to add additional variables (Ys) to the dual problem. The additional variables....etc
+The objective function of the dual is set up so that ideally each width of a city does not overlap another while trying to maxmize the size of each city.
+```
+It can be written as:
+```
+max 2*r_u
+
+For suceeding iterations, we use the subtours to add additional constraints to the dual. We add an additional variable, Ys, to the constraint inequalities so that the radius of the city i to city j plus the "moat" Ys of i and Ys of j is <= D(i,j). This is repeated until the tour for the primal is found.
+```
+It can be written as:
+```
+for every Si in S_s
+r_u + r_v + summation of Ys ≤ D(u,v).
+u E S, v !=E
+
 
 ## Resources
 http://www.math.uwaterloo.ca/tsp/methods/opt/zone.htm
