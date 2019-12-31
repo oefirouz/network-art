@@ -35,11 +35,6 @@ It can be written as:
 ![](dual_constraints.png)
 
 
-for every Si in S_s
-r_u + r_v + summation of Ys ≤ D(u,v).
-u in S_i, v != in S_i
-
-
 ## Resources
 http://www.math.uwaterloo.ca/tsp/methods/opt/zone.htm
 
