@@ -22,19 +22,19 @@ It can be written as:
 We then keep iterating until we have no subtours left. Keep in mind that past constraints must be kept in new iterations.
 
 ## The Dual (size of the city)
-The objective function of the dual is set up so that ideally each width of a city does not overlap another while trying to maxmize the size of each city.
+The objective function of the dual is set up so that each width (2*radius) of a city does not overlap another while trying to maxmize the size of each city.
 ```
 It can be written as:
 ```
-max 2*r_u
+![](dual_equation.png)
 
-For suceeding iterations, we use the subtours to add additional constraints to the dual. We add an additional variable, Ys, to the constraint inequalities so that the radius of the city i to city j plus the "moat" Ys of i and Ys of j is <= D(i,j). This is repeated until the tour for the primal is found.
+For suceeding iterations, we use the subtours to add additional constraints to the dual. We add an additional variable Ys to the constraint inequalities so that the radius of city i to city j plus the "moat" Ys_i and Ys_j is <= D(i,j). This is repeated until the tour for the primal is found.
 ```
 It can be written as:
 ```
 for every Si in S_s
 r_u + r_v + summation of Ys ≤ D(u,v).
-u E S, v !=E
+u in S_i, v != in S_i
 
 
 ## Resources
